@@ -1,12 +1,21 @@
 #!/bin/bash
 set -eo pipefail
 
+# Function to stop all sandbox containers
+cleanup() {
+    echo "Stopping sandbox containers..."
+    docker stop $(docker ps -q --filter ancestor=ghcr.io/opendevin/sandbox:main)
+}
+
 echo "Starting OpenDevin..."
 if [[ $NO_SETUP == "true" ]]; then
   echo "Skipping setup, running as $(whoami)"
   "$@"
   exit 0
 fi
+
+# Trap SIGTERM signal and call cleanup function
+trap cleanup SIGTERM
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "The OpenDevin entrypoint.sh must run as root"

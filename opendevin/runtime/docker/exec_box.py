@@ -297,12 +297,18 @@ class DockerExecBox(Sandbox):
             except docker.errors.NotFound:
                 pass
 
-    # Register the close method as the handler for SIGINT
+    @staticmethod
+    def close_all():
+        logger.info('Closing all sandbox containers...')
+        for instance in DockerExecBox.instances:
+            instance.close()
+
+    @staticmethod
     def signal_handler(sig, frame):
         logger.info('SIGINT received, closing sandbox containers...')
-        self.close()
+        DockerExecBox.close_all()
 
-    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, DockerExecBox.signal_handler)
 
     def get_working_directory(self):
         return self.sandbox_workspace_dir

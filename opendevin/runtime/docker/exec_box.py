@@ -1,11 +1,11 @@
 import atexit
 import concurrent.futures
 import os
+import signal
 import sys
 import tarfile
 import time
 import uuid
-import signal
 from collections import namedtuple
 from glob import glob
 
@@ -24,6 +24,7 @@ OutputType = namedtuple('OutputType', ['content'])
 
 
 class DockerExecBox(Sandbox):
+    instances = []  # Static list to keep track of all DockerExecBox instances
     instance_id: str
     container_image: str
     container_name_prefix = 'opendevin-sandbox-'
@@ -81,6 +82,9 @@ class DockerExecBox(Sandbox):
         super().__init__()
 
         signal.signal(signal.SIGINT, self.signal_handler)
+
+        DockerExecBox.instances.append(self)
+        logger.info(f'Added instance {self.instance_id} to instances list')
 
     def setup_devin_user(self):
         cmds = [
@@ -289,6 +293,11 @@ class DockerExecBox(Sandbox):
 
     # clean up the container, cannot do it in __del__ because the python interpreter is already shutting down
     def close(self):
+        try:
+            DockerExecBox.instances.remove(self)
+            logger.info(f'Removed instance {self.instance_id} from instances list')
+        except ValueError:
+            logger.warning(f'Instance {self.instance_id} not found in instances list on close')
         containers = self.docker_client.containers.list(all=True)
         for container in containers:
             try:
@@ -308,7 +317,7 @@ class DockerExecBox(Sandbox):
         logger.info('SIGINT received, closing sandbox containers...')
         DockerExecBox.close_all()
 
-    signal.signal(signal.SIGINT, DockerExecBox.signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
 
     def get_working_directory(self):
         return self.sandbox_workspace_dir

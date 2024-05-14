@@ -5,6 +5,7 @@ import sys
 import tarfile
 import time
 import uuid
+import signal
 from collections import namedtuple
 from glob import glob
 
@@ -78,6 +79,8 @@ class DockerExecBox(Sandbox):
             self.setup_devin_user()
         atexit.register(self.close)
         super().__init__()
+
+        signal.signal(signal.SIGINT, self.signal_handler)
 
     def setup_devin_user(self):
         cmds = [
@@ -293,6 +296,13 @@ class DockerExecBox(Sandbox):
                     container.remove(force=True)
             except docker.errors.NotFound:
                 pass
+
+    # Register the close method as the handler for SIGINT
+    def signal_handler(sig, frame):
+        logger.info('SIGINT received, closing sandbox containers...')
+        self.close()
+
+    signal.signal(signal.SIGINT, signal_handler)
 
     def get_working_directory(self):
         return self.sandbox_workspace_dir

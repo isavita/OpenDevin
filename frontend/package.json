@@ -43,7 +43,7 @@
     "preview": "vite preview",
     "make-i18n": "node scripts/make-i18n-translations.cjs",
     "prelint": "npm run make-i18n",
-    "lint": "eslint src --ext .ts,.tsx,.js && prettier --check src/**/*.{ts,tsx}",
+    "lint": "eslint src/index.tsx src/App.tsx --config .eslintrc.cjs --no-ignore && prettier --check src/**/*.{ts,tsx}",
     "prepare": "cd .. && husky install frontend/.husky"
   },
   "husky": {

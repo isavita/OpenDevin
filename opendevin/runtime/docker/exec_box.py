@@ -297,7 +297,9 @@ class DockerExecBox(Sandbox):
             DockerExecBox.instances.remove(self)
             logger.info(f'Removed instance {self.instance_id} from instances list')
         except ValueError:
-            logger.warning(f'Instance {self.instance_id} not found in instances list on close')
+            logger.warning(
+                f'Instance {self.instance_id} not found in instances list on close'
+            )
         containers = self.docker_client.containers.list(all=True)
         for container in containers:
             try:
@@ -316,8 +318,6 @@ class DockerExecBox(Sandbox):
     def signal_handler(sig, frame):
         logger.info('SIGINT received, closing sandbox containers...')
         DockerExecBox.close_all()
-
-signal.signal(signal.SIGINT, DockerExecBox.signal_handler)
 
     def get_working_directory(self):
         return self.sandbox_workspace_dir
@@ -377,3 +377,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         logger.info('Exiting...')
     exec_box.close()
+    # Register the close_all method as the handler for SIGINT
+    signal.signal(signal.SIGINT, DockerExecBox.signal_handler)

@@ -317,7 +317,7 @@ class DockerExecBox(Sandbox):
         logger.info('SIGINT received, closing sandbox containers...')
         DockerExecBox.close_all()
 
-    signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGINT, DockerExecBox.signal_handler)
 
     def get_working_directory(self):
         return self.sandbox_workspace_dir
